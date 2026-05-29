@@ -1,0 +1,4 @@
+La versione 83 apporta qualche piccola miglioria, come:
+- Risoluzione dei crash quando si fa clic sulle mezioni
+- Modifica dell'icona bot
+- Aggiunto un promemoria per l'aggiunta di una descrizione se posti un'immagine, per permettere alle persone con ridotta capacità visiva di partecipare. Grazie @FineFindus!
