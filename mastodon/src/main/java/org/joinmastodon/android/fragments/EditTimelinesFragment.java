@@ -160,7 +160,7 @@ public class EditTimelinesFragment extends MastodonRecyclerFragment<TimelineDefi
 
 	private void addTimeline(TimelineDefinition tl){
 		data.add(tl.copy());
-		adapter.notifyItemInserted(data.size());
+		adapter.notifyItemInserted(data.size() - 1);
 		saveTimelines();
 		updateOptionsMenu();
 	}
@@ -178,6 +178,7 @@ public class EditTimelinesFragment extends MastodonRecyclerFragment<TimelineDefi
                 .setPositiveButton(R.string.save, (d, which) -> {
                     TimelineDefinition tl = TimelineDefinition.ofCustomLocalTimeline(input.getText().toString().trim());
                     data.add(tl);
+                    adapter.notifyItemInserted(data.size() - 1);
                     saveTimelines();
                 })
                 .setNegativeButton(R.string.cancel, (d, which) -> {
@@ -236,7 +237,10 @@ public class EditTimelinesFragment extends MastodonRecyclerFragment<TimelineDefi
 		updated=true;
 		AccountLocalPreferences prefs=AccountSessionManager.get(accountID).getLocalPreferences();
 		if(data.isEmpty()) data.add(TimelineDefinition.HOME_TIMELINE);
-		prefs.timelines=data;
+		// 使用拷贝赋值而非直接引用赋值：
+		// 若直接 prefs.timelines = data，HomeTabFragment.onShown() 用 != 比较引用时
+		// 会检测到引用已变（timelinesList 持有旧引用），从而每次都触发 restartApp()。
+		prefs.timelines = new ArrayList<>(data);
 		prefs.save();
 	}
 
