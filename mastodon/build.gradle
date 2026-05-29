@@ -8,6 +8,15 @@ java {
 	}
 }
 
+configurations {
+	all {
+		exclude group: 'androidx.collection', module: 'collection'
+		exclude group: 'androidx.concurrent', module: 'concurrent-futures'
+		exclude group: 'com.google.guava', module: 'listenablefuture'
+		exclude group: 'com.google.guava', module: 'guava'
+	}
+}
+
 android {
 	compileSdk 33
 	defaultConfig {
