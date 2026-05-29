@@ -404,6 +404,4 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 				.setNegativeButton(R.string.cancel, null)
 				.show();
 	}
-
-	}
 }
