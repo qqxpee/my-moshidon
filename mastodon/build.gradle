@@ -11,6 +11,9 @@ if (configFile.exists()) {
 def customAppId = System.getenv("CUSTOM_APPLICATION_ID") ?: configProperties.getProperty("custom_application_id", "org.joinmastodon.android.moshinda")
 def customAppName = System.getenv("CUSTOM_APP_NAME") ?: configProperties.getProperty("custom_app_name", "Moshidon")
 def maxImagesLimit = System.getenv("MAX_IMAGES_LIMIT") ?: configProperties.getProperty("max_images_limit", "12")
+def resolvedVersionCode = (System.getenv("VERSION_CODE") ?: configProperties.getProperty("version_code", "1")).toInteger()
+def resolvedVersionName = System.getenv("VERSION_NAME") ?: configProperties.getProperty("version_name", "1.0.0")
+
 
 java {
 	toolchain {
@@ -36,8 +39,8 @@ android {
 		applicationId customAppId
 		minSdk 23
 		targetSdk 34
-		versionCode 1
-		versionName "1.0.0"
+		versionCode resolvedVersionCode
+		versionName resolvedVersionName
 		buildConfigField "int", "MAX_IMAGES_LIMIT", maxImagesLimit
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['ar-rSA', 'ar-rDZ', 'be-rBY', 'bn-rBD', 'bs-rBA', 'ca-rES', 'cs-rCZ', 'da-rDK', 'de-rDE', 'el-rGR', 'es-rES', 'eu-rES', 'fa-rIR', 'fi-rFI', 'fil-rPH', 'fr-rFR', 'ga-rIE', 'gd-rGB', 'gl-rES', 'hi-rIN', 'hr-rHR', 'hu-rHU', 'hy-rAM', 'ig-rNG', 'in-rID', 'is-rIS', 'it-rIT', 'iw-rIL', 'ja-rJP', 'kab', 'ko-rKR', 'my-rMM', 'nl-rNL', 'no-rNO', 'oc-rFR', 'pl-rPL', 'pt-rBR', 'pt-rPT', 'ro-rRO', 'ru-rRU', 'si-rLK', 'sl-rSI', 'sv-rSE', 'th-rTH', 'tr-rTR', 'uk-rUA', 'ur-rIN', 'vi-rVN', 'zh-rCN', 'zh-rTW']

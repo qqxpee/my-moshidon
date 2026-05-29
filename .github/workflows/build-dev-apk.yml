@@ -15,11 +15,20 @@ on:
         description: '最大图片上传限制/Max Images Limit (留空则优先读取 GitHub Secrets/Variables 配置，若仍无则取项目配置文件)'
         required: false
         default: ''
+      version_code:
+        description: '版本号/Version Code (整型数值，留空则自动递增为 GitHub 构建号)'
+        required: false
+        default: ''
+      version_name:
+        description: '版本名称/Version Name (例如 1.0.0，留空则默认为 1.0.构建号)'
+        required: false
+        default: ''
 
 env:
   CUSTOM_APPLICATION_ID: ${{ github.event.inputs.custom_application_id || secrets.CUSTOM_APPLICATION_ID || vars.CUSTOM_APPLICATION_ID || '' }}
   CUSTOM_APP_NAME: ${{ github.event.inputs.custom_app_name || secrets.CUSTOM_APP_NAME || vars.CUSTOM_APP_NAME || '' }}
   MAX_IMAGES_LIMIT: ${{ github.event.inputs.max_images_limit || secrets.MAX_IMAGES_LIMIT || vars.MAX_IMAGES_LIMIT || '' }}
+
 
 jobs:
   build:
@@ -43,7 +52,37 @@ jobs:
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
+      - name: Resolve Version Configurations
+        run: |
+          # 1. Resolve Version Code
+          RESOLVED_VERSION_CODE="${{ github.event.inputs.version_code || secrets.VERSION_CODE || vars.VERSION_CODE || '' }}"
+          if [ -z "$RESOLVED_VERSION_CODE" ]; then
+            if [ -f "config.properties" ]; then
+              RESOLVED_VERSION_CODE=$(grep "^version_code=" config.properties | cut -d'=' -f2 | tr -d '\r\n ')
+            fi
+          fi
+          if [ -z "$RESOLVED_VERSION_CODE" ]; then
+            RESOLVED_VERSION_CODE="${{ github.run_number }}"
+          fi
+          
+          # 2. Resolve Version Name
+          RESOLVED_VERSION_NAME="${{ github.event.inputs.version_name || secrets.VERSION_NAME || vars.VERSION_NAME || '' }}"
+          if [ -z "$RESOLVED_VERSION_NAME" ]; then
+            if [ -f "config.properties" ]; then
+              RESOLVED_VERSION_NAME=$(grep "^version_name=" config.properties | cut -d'=' -f2 | tr -d '\r\n ')
+            fi
+          fi
+          if [ -z "$RESOLVED_VERSION_NAME" ]; then
+            RESOLVED_VERSION_NAME="1.0.${{ github.run_number }}"
+          fi
+          
+          echo "VERSION_CODE=$RESOLVED_VERSION_CODE" >> $GITHUB_ENV
+          echo "VERSION_NAME=$RESOLVED_VERSION_NAME" >> $GITHUB_ENV
+          echo "Resolved Version Code: $RESOLVED_VERSION_CODE"
+          echo "Resolved Version Name: $RESOLVED_VERSION_NAME"
+
       - name: Build Debug (Dev) APK
+
         run: |
           chmod +x gradlew
           ./gradlew :mastodon:assembleDebug --no-daemon
