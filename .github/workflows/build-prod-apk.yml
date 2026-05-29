@@ -212,6 +212,7 @@ jobs:
             exit 1
           fi
           
+          # 直接使用中文应用名作为 APK 文件名
           SIGNED_APK="${{ env.RESOLVED_APP_NAME }}-v${{ env.VERSION_NAME }}-Prod-Signed.apk"
           
           $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
@@ -223,21 +224,19 @@ jobs:
           echo "SIGNED_APK_PATH=$SIGNED_APK" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ env.VERSION_NAME }}-prod
-          name: "${{ env.RESOLVED_APP_NAME }} v${{ env.VERSION_NAME }}-Prod"
-          body: |
-            ## MoshidonQX 正式版发布 (Production)
-            - **应用名**：${{ env.RESOLVED_APP_NAME }}
-            - **包名**：${{ env.RESOLVED_APP_ID }}
-            - **版本**：${{ env.VERSION_NAME }}-Prod (VersionCode: ${{ env.VERSION_CODE }})
-            - **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器
-            
-            > [!TIP]
-            > 此版本为生产发布版，内部未激活崩溃日志写入系统以节省用户存储空间，极其稳定纯净！
-          files: |
-            ${{ env.SIGNED_APK_PATH }}
+        run: |
+          # 使用 gh CLI 创建 Release 并上传 APK
+          # gh CLI 通过 multipart 表单直接上传，GitHub API 原样存储文件名，不会剥离中文字符
+          # 而 softprops/action-gh-release 会在处理文件路径时丢弃非 ASCII 字符导致下载 URL 异常
+          
+          TAG="v${{ env.VERSION_NAME }}-prod"
+          TITLE="${{ env.RESOLVED_APP_NAME }} v${{ env.VERSION_NAME }}-Prod"
+          NOTES=$'## MoshidonQX 正式版发布 (Production)\n- **应用名**：${{ env.RESOLVED_APP_NAME }}\n- **包名**：${{ env.RESOLVED_APP_ID }}\n- **版本**：${{ env.VERSION_NAME }}-Prod (VersionCode: ${{ env.VERSION_CODE }})\n- **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器\n\n> [!TIP]\n> 此版本为生产发布版，内部未激活崩溃日志写入系统以节省用户存储空间，极其稳定纯净！'
+          
+          gh release create "$TAG" \
+            --title "$TITLE" \
+            --notes "$NOTES" \
+            "${{ env.SIGNED_APK_PATH }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
