@@ -4,15 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       custom_application_id:
-        description: '自定义包名/Package Name (例如: org.joinmastodon.android.qx，留空则默认取项目配置文件)'
+        description: '自定义包名/Package Name (留空则优先读取 GitHub Secrets/Variables 配置，若仍无则取项目配置文件)'
         required: false
         default: ''
       custom_app_name:
-        description: '自定义应用名/App Name (例如: MoshidonQX，留空则默认取项目配置文件)'
+        description: '自定义应用名/App Name (留空则优先读取 GitHub Secrets/Variables 配置，若仍无则取项目配置文件)'
         required: false
         default: ''
       max_images_limit:
-        description: '最大图片上传限制/Max Images Limit (例如: 12，留空则默认取项目配置文件)'
+        description: '最大图片上传限制/Max Images Limit (留空则优先读取 GitHub Secrets/Variables 配置，若仍无则取项目配置文件)'
         required: false
         default: ''
 
