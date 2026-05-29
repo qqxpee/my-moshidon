@@ -105,19 +105,19 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 				unifiedPushItem=new CheckableListItem<>(R.string.sk_settings_unifiedpush, 0, CheckableListItem.Style.SWITCH, useUnifiedPush, R.drawable.ic_fluent_alert_arrow_up_24_regular, i->onUnifiedPushClick(), true),
 
 				emailNotificationsItem=new CheckableListItem<>("启用邮件通知", "有新通知时自动向邮箱发送邮件", CheckableListItem.Style.SWITCH, GlobalUserPreferences.emailNotificationsEnabled, R.drawable.ic_fluent_mail_24_regular, i->toggleCheckableItem(emailNotificationsItem)),
-				smtpHostItem=new ListItem<>("SMTP 服务器", GlobalUserPreferences.smtpHost, R.drawable.ic_fluent_mail_settings_24_regular, i->showTextInputDialog("SMTP 服务器地址", GlobalUserPreferences.smtpHost, text->{
+				smtpHostItem=new ListItem<>("SMTP 服务器", GlobalUserPreferences.smtpHost, R.drawable.ic_fluent_server_24_regular, i->showTextInputDialog("SMTP 服务器地址", GlobalUserPreferences.smtpHost, text->{
 					GlobalUserPreferences.smtpHost=text;
 					smtpHostItem.subtitle=text;
 					rebindItem(smtpHostItem);
 				})),
-				smtpPortItem=new ListItem<>("SMTP 端口", String.valueOf(GlobalUserPreferences.smtpPort), R.drawable.ic_fluent_mail_settings_24_regular, i->showTextInputDialog("SMTP 端口", String.valueOf(GlobalUserPreferences.smtpPort), text->{
+				smtpPortItem=new ListItem<>("SMTP 端口", String.valueOf(GlobalUserPreferences.smtpPort), R.drawable.ic_fluent_settings_24_regular, i->showTextInputDialog("SMTP 端口", String.valueOf(GlobalUserPreferences.smtpPort), text->{
 					try {
 						GlobalUserPreferences.smtpPort=Integer.parseInt(text);
 						smtpPortItem.subtitle=text;
 						rebindItem(smtpPortItem);
 					} catch(Exception ignored) {}
 				})),
-				smtpUsernameItem=new ListItem<>("SMTP 用户名", GlobalUserPreferences.smtpUsername, R.drawable.ic_fluent_person_mail_24_regular, i->showTextInputDialog("SMTP 用户名", GlobalUserPreferences.smtpUsername, text->{
+				smtpUsernameItem=new ListItem<>("SMTP 用户名", GlobalUserPreferences.smtpUsername, R.drawable.ic_fluent_person_24_regular, i->showTextInputDialog("SMTP 用户名", GlobalUserPreferences.smtpUsername, text->{
 					GlobalUserPreferences.smtpUsername=text;
 					smtpUsernameItem.subtitle=text;
 					rebindItem(smtpUsernameItem);
@@ -127,18 +127,18 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 					smtpPasswordItem.subtitle=TextUtils.isEmpty(text) ? "" : "********";
 					rebindItem(smtpPasswordItem);
 				})),
-				smtpSSLItem=new CheckableListItem<>("使用 SSL/TLS (端口 465)", 0, CheckableListItem.Style.SWITCH, GlobalUserPreferences.smtpUseSSL, R.drawable.ic_fluent_lock_shield_24_regular, i->toggleCheckableItem(smtpSSLItem)),
-				senderEmailItem=new ListItem<>("发件人邮箱", GlobalUserPreferences.senderEmail, R.drawable.ic_fluent_mail_arrow_right_24_regular, i->showTextInputDialog("发件人邮箱", GlobalUserPreferences.senderEmail, text->{
+				smtpSSLItem=new CheckableListItem<>("使用 SSL/TLS (端口 465)", 0, CheckableListItem.Style.SWITCH, GlobalUserPreferences.smtpUseSSL, R.drawable.ic_fluent_shield_24_regular, i->toggleCheckableItem(smtpSSLItem)),
+				senderEmailItem=new ListItem<>("发件人邮箱", GlobalUserPreferences.senderEmail, R.drawable.ic_fluent_mail_24_regular, i->showTextInputDialog("发件人邮箱", GlobalUserPreferences.senderEmail, text->{
 					GlobalUserPreferences.senderEmail=text;
 					senderEmailItem.subtitle=text;
 					rebindItem(senderEmailItem);
 				})),
-				receiverEmailItem=new ListItem<>("收件人邮箱", GlobalUserPreferences.receiverEmail, R.drawable.ic_fluent_mail_arrow_down_24_regular, i->showTextInputDialog("收件人邮箱", GlobalUserPreferences.receiverEmail, text->{
+				receiverEmailItem=new ListItem<>("收件人邮箱", GlobalUserPreferences.receiverEmail, R.drawable.ic_fluent_mail_24_regular, i->showTextInputDialog("收件人邮箱", GlobalUserPreferences.receiverEmail, text->{
 					GlobalUserPreferences.receiverEmail=text;
 					receiverEmailItem.subtitle=text;
 					rebindItem(receiverEmailItem);
 				})),
-				testEmailItem=new ListItem<>("发送测试邮件", "点击测试当前 SMTP 邮箱配置", R.drawable.ic_fluent_mail_open_24_regular, i->sendTestEmail())
+				testEmailItem=new ListItem<>("发送测试邮件", "点击测试当前 SMTP 邮箱配置", R.drawable.ic_fluent_send_24_regular, i->sendTestEmail())
 		));
 
 		//only enable when distributors, who can receive notifications, are available
