@@ -186,13 +186,7 @@ public class GlobalUserPreferences{
 		senderEmail=prefs.getString("senderEmail", "");
 		receiverEmail=prefs.getString("receiverEmail", "");
 
-		Properties properties = new Properties();
-		try (java.io.InputStream is = MastodonApp.context.getAssets().open("config.properties")) {
-			properties.load(is);
-			maxImagesLimit = Integer.parseInt(properties.getProperty("max_images_limit", "12"));
-		} catch (Exception e) {
-			maxImagesLimit = prefs.getInt("maxImagesLimit", 12);
-		}
+		maxImagesLimit = BuildConfig.MAX_IMAGES_LIMIT;
 
 		theme=ThemePreference.values()[prefs.getInt("theme", 0)];
 
