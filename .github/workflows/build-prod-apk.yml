@@ -75,9 +75,25 @@ jobs:
           echo "RESOLVED_APP_NAME=$RESOLVED_APP_NAME" >> $GITHUB_ENV
           echo "Resolved App ID: $RESOLVED_APP_ID"
           echo "Resolved App Name: $RESOLVED_APP_NAME"
+          
+          # 3. Sanitize and Resolve Keystore Secret (Option 1 Safe Decryption)
+          CLEANED_KS=""
+          if [ -n "$KEYSTORE_FILE" ]; then
+            # Remove PEM-style dashed headers, newlines, and spaces
+            CLEANED_KS=$(echo -n "$KEYSTORE_FILE" | sed '/START/d' | sed '/END/d' | sed '/---/d' | tr -d '\r\n ')
+          fi
+          
+          if [ -n "$CLEANED_KS" ]; then
+            echo "CLEANED_KEYSTORE_FILE=$CLEANED_KS" >> $GITHUB_ENV
+            echo "USE_SECRET_KEYSTORE=true" >> $GITHUB_ENV
+            echo "Secret-based Keystore detected and sanitized successfully."
+          else
+            echo "USE_SECRET_KEYSTORE=false" >> $GITHUB_ENV
+            echo "No secret-based Keystore configured. Using auto-keystore."
+          fi
 
       - name: Restore Private Keystore Cache
-        if: ${{ env.KEYSTORE_FILE == '' }}
+        if: ${{ env.USE_SECRET_KEYSTORE == 'false' }}
         uses: actions/cache/restore@v4
         id: restore-keystore
         with:
@@ -91,12 +107,10 @@ jobs:
           PASSWORD_PATH="$KEYSTORE_DIR/keystore-password.txt"
           SIGNING_KS_PATH="release.jks"
           
-          if [ -n "${{ env.KEYSTORE_FILE }}" ]; then
-            echo "Use secret-based Keystore (configured via GitHub Secrets)."
-            echo "USE_SECRET_KEYSTORE=true" >> $GITHUB_ENV
+          if [ "${{ env.USE_SECRET_KEYSTORE }}" = "true" ]; then
+            echo "Use secret-based Keystore."
           else
             echo "Use auto-generated private Keystore (Zero-Config mode)."
-            echo "USE_SECRET_KEYSTORE=false" >> $GITHUB_ENV
             
             mkdir -p "$KEYSTORE_DIR"
             
@@ -127,19 +141,19 @@ jobs:
           fi
 
       - name: Save Private Keystore Cache
-        if: ${{ env.KEYSTORE_FILE == '' && steps.restore-keystore.outputs.cache-hit != 'true' }}
+        if: ${{ env.USE_SECRET_KEYSTORE == 'false' && steps.restore-keystore.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
         with:
           path: .github/secrets
           key: ${{ runner.os }}-keystore-${{ env.RESOLVED_APP_ID }}
 
       - name: Decode Secret Keystore
-        if: env.USE_SECRET_KEYSTORE == 'true'
+        if: ${{ env.USE_SECRET_KEYSTORE == 'true' }}
         uses: timheuer/base64-to-file@v1
         id: android_keystore
         with:
           fileName: "release.jks"
-          encodedString: ${{ env.KEYSTORE_FILE }}
+          encodedString: ${{ env.CLEANED_KEYSTORE_FILE }}
 
       - name: Prepare Signing Environment Variables
         run: |
