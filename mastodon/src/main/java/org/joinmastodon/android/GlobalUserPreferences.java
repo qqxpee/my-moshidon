@@ -84,15 +84,7 @@ public class GlobalUserPreferences{
 	public static boolean removeTrackingParams;
 	public static boolean enhanceTextSize;
 
-	// SMTP Email Notifications & Custom Image Limit
-	public static boolean emailNotificationsEnabled;
-	public static String smtpHost;
-	public static int smtpPort;
-	public static String smtpUsername;
-	public static String smtpPassword;
-	public static boolean smtpUseSSL;
-	public static String senderEmail;
-	public static String receiverEmail;
+	// Custom Image Limit
 	public static int maxImagesLimit;
 
 	public static SharedPreferences getPrefs(){
@@ -177,15 +169,6 @@ public class GlobalUserPreferences{
 		removeTrackingParams=prefs.getBoolean("removeTrackingParams", true);
 		enhanceTextSize=prefs.getBoolean("enhanceTextSize", false);
 
-		emailNotificationsEnabled=prefs.getBoolean("emailNotificationsEnabled", false);
-		smtpHost=prefs.getString("smtpHost", "");
-		smtpPort=prefs.getInt("smtpPort", 465);
-		smtpUsername=prefs.getString("smtpUsername", "");
-		smtpPassword=prefs.getString("smtpPassword", "");
-		smtpUseSSL=prefs.getBoolean("smtpUseSSL", true);
-		senderEmail=prefs.getString("senderEmail", "");
-		receiverEmail=prefs.getString("receiverEmail", "");
-
 		maxImagesLimit = BuildConfig.MAX_IMAGES_LIMIT;
 
 		theme=ThemePreference.values()[prefs.getInt("theme", 0)];
@@ -262,14 +245,6 @@ public class GlobalUserPreferences{
 				.putBoolean("showMediaPreview", showMediaPreview)
 				.putBoolean("removeTrackingParams", removeTrackingParams)
 				.putBoolean("enhanceTextSize", enhanceTextSize)
-				.putBoolean("emailNotificationsEnabled", emailNotificationsEnabled)
-				.putString("smtpHost", smtpHost)
-				.putInt("smtpPort", smtpPort)
-				.putString("smtpUsername", smtpUsername)
-				.putString("smtpPassword", smtpPassword)
-				.putBoolean("smtpUseSSL", smtpUseSSL)
-				.putString("senderEmail", senderEmail)
-				.putString("receiverEmail", receiverEmail)
 				.putInt("maxImagesLimit", maxImagesLimit)
 
 				.apply();

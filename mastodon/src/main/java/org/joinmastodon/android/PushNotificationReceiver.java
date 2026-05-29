@@ -168,22 +168,7 @@ public class PushNotificationReceiver extends BroadcastReceiver{
 		Account self=session.self;
 		String accountName="@"+self.username+"@"+AccountSessionManager.getInstance().getAccount(accountID).domain;
 
-		if (GlobalUserPreferences.emailNotificationsEnabled) {
-			String emailSubject = "Moshidon 收到新通知: " + pn.title;
-			String emailBody = pn.body + "\n\n通知类型: " + pn.notificationType + "\n账号: " + accountName;
-			org.joinmastodon.android.utils.MailSender.sendEmailAsync(
-					GlobalUserPreferences.smtpHost,
-					GlobalUserPreferences.smtpPort,
-					GlobalUserPreferences.smtpUsername,
-					GlobalUserPreferences.smtpPassword,
-					GlobalUserPreferences.smtpUseSSL,
-					GlobalUserPreferences.senderEmail,
-					GlobalUserPreferences.receiverEmail,
-					emailSubject,
-					emailBody,
-					null
-			);
-		}
+
 
 		Notification.Builder builder;
 		if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){

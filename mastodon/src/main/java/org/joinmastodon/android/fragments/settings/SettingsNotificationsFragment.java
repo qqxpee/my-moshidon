@@ -70,9 +70,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 	// MOSHIDON
 	private CheckableListItem<Void> swapBookmarkWithReblogItem;
 
-	// SMTP CONFIG
-	private CheckableListItem<Void> emailNotificationsItem, smtpSSLItem;
-	private ListItem<Void> smtpHostItem, smtpPortItem, smtpUsernameItem, smtpPasswordItem, senderEmailItem, receiverEmailItem, testEmailItem;
+
 
 	private AccountLocalPreferences lp;
 
@@ -102,43 +100,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 				swapBookmarkWithReblogItem=new CheckableListItem<>(R.string.mo_swap_bookmark_with_reblog, R.string.mo_swap_bookmark_with_reblog_summary, CheckableListItem.Style.SWITCH, GlobalUserPreferences.swapBookmarkWithBoostAction, R.drawable.ic_boost, i->toggleCheckableItem(swapBookmarkWithReblogItem)),
 				deleteItem=new CheckableListItem<>(R.string.sk_settings_enable_delete_notifications, 0, CheckableListItem.Style.SWITCH, GlobalUserPreferences.enableDeleteNotifications, R.drawable.ic_fluent_mail_inbox_dismiss_24_regular, i->toggleCheckableItem(deleteItem)),
 				onlyLatestItem=new CheckableListItem<>(R.string.sk_settings_single_notification, 0, CheckableListItem.Style.SWITCH, lp.keepOnlyLatestNotification, R.drawable.ic_fluent_convert_range_24_regular, i->toggleCheckableItem(onlyLatestItem), true),
-				unifiedPushItem=new CheckableListItem<>(R.string.sk_settings_unifiedpush, 0, CheckableListItem.Style.SWITCH, useUnifiedPush, R.drawable.ic_fluent_alert_arrow_up_24_regular, i->onUnifiedPushClick(), true),
-
-				emailNotificationsItem=new CheckableListItem<>("启用邮件通知", "有新通知时自动向邮箱发送邮件", CheckableListItem.Style.SWITCH, GlobalUserPreferences.emailNotificationsEnabled, R.drawable.ic_fluent_mail_24_regular, i->toggleCheckableItem(emailNotificationsItem)),
-				smtpHostItem=new ListItem<>("SMTP 服务器", GlobalUserPreferences.smtpHost, R.drawable.ic_fluent_server_24_regular, i->showTextInputDialog("SMTP 服务器地址", GlobalUserPreferences.smtpHost, text->{
-					GlobalUserPreferences.smtpHost=text;
-					smtpHostItem.subtitle=text;
-					rebindItem(smtpHostItem);
-				})),
-				smtpPortItem=new ListItem<>("SMTP 端口", String.valueOf(GlobalUserPreferences.smtpPort), R.drawable.ic_fluent_settings_24_regular, i->showTextInputDialog("SMTP 端口", String.valueOf(GlobalUserPreferences.smtpPort), text->{
-					try {
-						GlobalUserPreferences.smtpPort=Integer.parseInt(text);
-						smtpPortItem.subtitle=text;
-						rebindItem(smtpPortItem);
-					} catch(Exception ignored) {}
-				})),
-				smtpUsernameItem=new ListItem<>("SMTP 用户名", GlobalUserPreferences.smtpUsername, R.drawable.ic_fluent_person_24_regular, i->showTextInputDialog("SMTP 用户名", GlobalUserPreferences.smtpUsername, text->{
-					GlobalUserPreferences.smtpUsername=text;
-					smtpUsernameItem.subtitle=text;
-					rebindItem(smtpUsernameItem);
-				})),
-				smtpPasswordItem=new ListItem<>("SMTP 密码", TextUtils.isEmpty(GlobalUserPreferences.smtpPassword) ? "" : "********", R.drawable.ic_fluent_password_24_regular, i->showTextInputDialog("SMTP 密码", GlobalUserPreferences.smtpPassword, text->{
-					GlobalUserPreferences.smtpPassword=text;
-					smtpPasswordItem.subtitle=TextUtils.isEmpty(text) ? "" : "********";
-					rebindItem(smtpPasswordItem);
-				})),
-				smtpSSLItem=new CheckableListItem<>("使用 SSL/TLS (端口 465)", null, CheckableListItem.Style.SWITCH, GlobalUserPreferences.smtpUseSSL, R.drawable.ic_fluent_shield_24_regular, i->toggleCheckableItem(smtpSSLItem)),
-				senderEmailItem=new ListItem<>("发件人邮箱", GlobalUserPreferences.senderEmail, R.drawable.ic_fluent_mail_24_regular, i->showTextInputDialog("发件人邮箱", GlobalUserPreferences.senderEmail, text->{
-					GlobalUserPreferences.senderEmail=text;
-					senderEmailItem.subtitle=text;
-					rebindItem(senderEmailItem);
-				})),
-				receiverEmailItem=new ListItem<>("收件人邮箱", GlobalUserPreferences.receiverEmail, R.drawable.ic_fluent_mail_24_regular, i->showTextInputDialog("收件人邮箱", GlobalUserPreferences.receiverEmail, text->{
-					GlobalUserPreferences.receiverEmail=text;
-					receiverEmailItem.subtitle=text;
-					rebindItem(receiverEmailItem);
-				})),
-				testEmailItem=new ListItem<>("发送测试邮件", "点击测试当前 SMTP 邮箱配置", R.drawable.ic_fluent_send_24_regular, i->sendTestEmail())
+				unifiedPushItem=new CheckableListItem<>(R.string.sk_settings_unifiedpush, 0, CheckableListItem.Style.SWITCH, useUnifiedPush, R.drawable.ic_fluent_alert_arrow_up_24_regular, i->onUnifiedPushClick(), true)
 		));
 
 		//only enable when distributors, who can receive notifications, are available
@@ -169,8 +131,6 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 		GlobalUserPreferences.uniformNotificationIcon=uniformIconItem.checked;
 		GlobalUserPreferences.enableDeleteNotifications=deleteItem.checked;
 		GlobalUserPreferences.swapBookmarkWithBoostAction=swapBookmarkWithReblogItem.checked;
-		GlobalUserPreferences.emailNotificationsEnabled=emailNotificationsItem.checked;
-		GlobalUserPreferences.smtpUseSSL=smtpSSLItem.checked;
 		GlobalUserPreferences.save();
 		lp.keepOnlyLatestNotification=onlyLatestItem.checked;
 		lp.save();
@@ -445,35 +405,5 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 				.show();
 	}
 
-	private void sendTestEmail() {
-		Toast.makeText(getActivity(), "正在发送测试邮件...", Toast.LENGTH_SHORT).show();
-		org.joinmastodon.android.utils.MailSender.sendEmailAsync(
-				GlobalUserPreferences.smtpHost,
-				GlobalUserPreferences.smtpPort,
-				GlobalUserPreferences.smtpUsername,
-				GlobalUserPreferences.smtpPassword,
-				GlobalUserPreferences.smtpUseSSL,
-				GlobalUserPreferences.senderEmail,
-				GlobalUserPreferences.receiverEmail,
-				"Moshidon SMTP 测试邮件",
-				"恭喜！您的 Moshidon 邮件通知配置成功！这是一个测试邮件。",
-				new org.joinmastodon.android.utils.MailSender.Callback() {
-					@Override
-					public void onSuccess() {
-						getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), "测试邮件发送成功，请检查邮箱！", Toast.LENGTH_LONG).show());
-					}
-
-					@Override
-					public void onError(Exception e) {
-						getActivity().runOnUiThread(() -> {
-							new M3AlertDialogBuilder(getActivity())
-									.setTitle("发送失败")
-									.setMessage("邮件发送错误: " + e.getMessage())
-									.setPositiveButton(R.string.ok, null)
-									.show();
-						});
-					}
-				}
-		);
 	}
 }
