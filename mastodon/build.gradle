@@ -20,7 +20,8 @@ java {
 
 configurations {
 	all {
-		exclude group: 'com.google.guava', module: 'listenablefuture'
+		exclude group: 'me.grishka.litex', module: 'collection'
+		exclude group: 'me.grishka.litex', module: 'concurrent'
 	}
 }
 
