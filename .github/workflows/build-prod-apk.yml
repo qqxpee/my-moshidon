@@ -47,19 +47,106 @@ jobs:
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Verify Signing Secrets
+      - name: Resolve Custom Configurations
         run: |
-          if [ -z "${{ env.KEYSTORE_FILE }}" ]; then
-            echo "ERROR: KEYSTORE_FILE secret is missing! Please configure KEYSTORE_FILE in repository secrets."
-            exit 1
+          # 1. Resolve Application ID
+          RESOLVED_APP_ID="${{ env.CUSTOM_APPLICATION_ID }}"
+          if [ -z "$RESOLVED_APP_ID" ]; then
+            if [ -f "config.properties" ]; then
+              RESOLVED_APP_ID=$(grep "^custom_application_id=" config.properties | cut -d'=' -f2 | tr -d '\r\n ')
+            fi
+          fi
+          if [ -z "$RESOLVED_APP_ID" ]; then
+            RESOLVED_APP_ID="org.joinmastodon.android.qx"
+          fi
+          
+          # 2. Resolve Application Name
+          RESOLVED_APP_NAME="${{ env.CUSTOM_APP_NAME }}"
+          if [ -z "$RESOLVED_APP_NAME" ]; then
+            if [ -f "config.properties" ]; then
+              RESOLVED_APP_NAME=$(grep "^custom_app_name=" config.properties | cut -d'=' -f2 | tr -d '\r\n ')
+            fi
+          fi
+          if [ -z "$RESOLVED_APP_NAME" ]; then
+            RESOLVED_APP_NAME="Moshidon"
+          fi
+          
+          echo "RESOLVED_APP_ID=$RESOLVED_APP_ID" >> $GITHUB_ENV
+          echo "RESOLVED_APP_NAME=$RESOLVED_APP_NAME" >> $GITHUB_ENV
+          echo "Resolved App ID: $RESOLVED_APP_ID"
+          echo "Resolved App Name: $RESOLVED_APP_NAME"
+
+      - name: Restore Private Keystore Cache
+        if: ${{ env.KEYSTORE_FILE == '' }}
+        uses: actions/cache/restore@v4
+        id: restore-keystore
+        with:
+          path: .github/secrets
+          key: ${{ runner.os }}-keystore-${{ env.RESOLVED_APP_ID }}
+
+      - name: Setup Keystore & Signing Config
+        run: |
+          KEYSTORE_DIR=".github/secrets"
+          KEYSTORE_PATH="$KEYSTORE_DIR/release.jks"
+          PASSWORD_PATH="$KEYSTORE_DIR/keystore-password.txt"
+          SIGNING_KS_PATH="release.jks"
+          
+          if [ -n "${{ env.KEYSTORE_FILE }}" ]; then
+            echo "Use secret-based Keystore (configured via GitHub Secrets)."
+            echo "USE_SECRET_KEYSTORE=true" >> $GITHUB_ENV
+          else
+            echo "Use auto-generated private Keystore (Zero-Config mode)."
+            echo "USE_SECRET_KEYSTORE=false" >> $GITHUB_ENV
+            
+            mkdir -p "$KEYSTORE_DIR"
+            
+            if [ -f "$KEYSTORE_PATH" ] && [ -f "$PASSWORD_PATH" ]; then
+              echo "Private Keystore successfully restored from secure GitHub Actions cache."
+              KS_PASS=$(cat "$PASSWORD_PATH" | tr -d '\r\n ')
+            else
+              echo "No cached keystore found. Generating a new private keystore..."
+              KS_PASS="${{ env.RESOLVED_APP_ID }}"
+              echo "Using application package name as password."
+              
+              # Generate keystore using keytool
+              keytool -genkeypair -v -keystore "$KEYSTORE_PATH" \
+                -alias custom-alias \
+                -keyalg RSA -keysize 2048 -validity 10000 \
+                -storepass "$KS_PASS" -keypass "$KS_PASS" \
+                -dname "CN=Developer, OU=Mobile, O=CustomApp, L=None, ST=None, C=UN"
+                
+              # Save password
+              echo -n "$KS_PASS" > "$PASSWORD_PATH"
+              echo "New private Keystore successfully generated!"
+            fi
+            
+            # Copy to temp location for apksigner
+            cp "$KEYSTORE_PATH" "$SIGNING_KS_PATH"
+            echo "SIGNING_KEYSTORE_PATH=$SIGNING_KS_PATH" >> $GITHUB_ENV
+            echo "SIGNING_PASSWORD=$KS_PASS" >> $GITHUB_ENV
           fi
 
-      - name: Decode Keystore
+      - name: Save Private Keystore Cache
+        if: ${{ env.KEYSTORE_FILE == '' && steps.restore-keystore.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .github/secrets
+          key: ${{ runner.os }}-keystore-${{ env.RESOLVED_APP_ID }}
+
+      - name: Decode Secret Keystore
+        if: env.USE_SECRET_KEYSTORE == 'true'
         uses: timheuer/base64-to-file@v1
         id: android_keystore
         with:
           fileName: "release.jks"
           encodedString: ${{ env.KEYSTORE_FILE }}
+
+      - name: Prepare Signing Environment Variables
+        run: |
+          if [ "${{ env.USE_SECRET_KEYSTORE }}" = "true" ]; then
+            echo "SIGNING_KEYSTORE_PATH=${{ steps.android_keystore.outputs.filePath }}" >> $GITHUB_ENV
+            echo "SIGNING_PASSWORD=${{ env.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+          fi
 
       - name: Build Release APK
         run: |
@@ -74,31 +161,25 @@ jobs:
             exit 1
           fi
           
-          FINAL_APP_NAME="${{ env.CUSTOM_APP_NAME }}"
-          if [ -z "$FINAL_APP_NAME" ]; then
-            FINAL_APP_NAME="Moshidon"
-          fi
-          
-          SIGNED_APK="${FINAL_APP_NAME}-v2.3.0-Prod-Signed.apk"
+          SIGNED_APK="${{ env.RESOLVED_APP_NAME }}-v2.3.0-Prod-Signed.apk"
           
           $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
-            --ks ${{ steps.android_keystore.outputs.filePath }} \
-            --ks-pass pass:${{ env.KEYSTORE_PASSWORD }} \
+            --ks "${{ env.SIGNING_KEYSTORE_PATH }}" \
+            --ks-pass "pass:${{ env.SIGNING_PASSWORD }}" \
             --ks-key-alias custom-alias \
             --out "$SIGNED_APK" "$UNSIGNED_APK"
             
           echo "SIGNED_APK_PATH=$SIGNED_APK" >> $GITHUB_ENV
-          echo "FINAL_APP_NAME=$FINAL_APP_NAME" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}-prod
-          name: "${{ env.FINAL_APP_NAME }} v2.3.0-Prod.${{ github.run_number }}"
+          name: "${{ env.RESOLVED_APP_NAME }} v2.3.0-Prod.${{ github.run_number }}"
           body: |
             ## MoshidonQX 正式版发布 (Production)
-            - **应用名**：${{ env.FINAL_APP_NAME }}
-            - **包名**：${{ env.CUSTOM_APPLICATION_ID }}
+            - **应用名**：${{ env.RESOLVED_APP_NAME }}
+            - **包名**：${{ env.RESOLVED_APP_ID }}
             - **版本**：2.3.0-Prod.${{ github.run_number }}
             - **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器
             
@@ -108,3 +189,4 @@ jobs:
             ${{ env.SIGNED_APK_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
