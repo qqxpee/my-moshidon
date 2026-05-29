@@ -161,7 +161,7 @@ jobs:
             exit 1
           fi
           
-          SIGNED_APK="${{ env.RESOLVED_APP_NAME }}-v2.3.0-Prod-Signed.apk"
+          SIGNED_APK="${{ env.RESOLVED_APP_NAME }}-v1.0.0-Prod-Signed.apk"
           
           $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
             --ks "${{ env.SIGNING_KEYSTORE_PATH }}" \
@@ -175,12 +175,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}-prod
-          name: "${{ env.RESOLVED_APP_NAME }} v2.3.0-Prod.${{ github.run_number }}"
+          name: "${{ env.RESOLVED_APP_NAME }} v1.0.0-Prod.${{ github.run_number }}"
           body: |
             ## MoshidonQX 正式版发布 (Production)
             - **应用名**：${{ env.RESOLVED_APP_NAME }}
             - **包名**：${{ env.RESOLVED_APP_ID }}
-            - **版本**：2.3.0-Prod.${{ github.run_number }}
+            - **版本**：1.0.0-Prod.${{ github.run_number }}
             - **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器
             
             > [!TIP]

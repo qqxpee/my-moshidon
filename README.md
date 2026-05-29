@@ -74,3 +74,13 @@
   1. 完成上述一键配置后，进入 **Actions** 页签，选择 **`Build MoshidonQX (Prod 正式签名版)`**。
   2. 点击 **Run workflow**（可选择输入临时定制参数）并启动构建。
   3. 编译完成后，直接前往您仓库的 **Releases** 页面，下载打包好的专属正式版 APK 即可！
+
+---
+
+## **💖 致谢与致敬项目 (Credits & Acknowledgments)**
+
+本项目的顺利完成离不开以下优秀开源项目的启发与奠基，在此表示衷心的感谢与敬意：
+
+* **Moshidon** (by LucasGGamerM) - 优秀的 Mastodon 高颜值 Android 客户端：[GitHub - LucasGGamerM/moshidon](https://github.com/LucasGGamerM/moshidon)
+* **Megalodon** (by sk22) - 极具开创性的 Mastodon 分支客户端：[GitHub - sk22/megalodon](https://github.com/sk22/megalodon)
+* **Mastodon Android App** (by Mastodon Core Team) - 官方原生 Android 客户端：[GitHub - mastodon/mastodon-android](https://github.com/mastodon/mastodon-android)
