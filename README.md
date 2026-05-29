@@ -66,22 +66,30 @@ max_images_limit=12
 ### **第一步：Fork 本仓库**
 点击本仓库右上角的 **Fork** 按钮，复制一份完整的代码到您的个人 GitHub 账号下。
 
-### **第二步：手动触发 Actions 构建**
-1. 进入您个人仓库的 **Actions** 页签。
-2. 在左侧列表中点击工作流：`Build and Release MoshidonQX (Chinese Support)`。
-3. 点击右侧的 **Run workflow** 按钮。
-4. （可选）在输入框中键入包名、应用名和多图限制。如果不输入，系统将自动读取您在第二步设置的 Repository 变量或 [config.properties](file:///e:/temp/moshidon/config.properties) 文件。
-5. 点击绿色按钮启动构建。
+### **第二步：选择您的工作流并触发构建**
 
-### **第三步：下载与安装**
-* **测试开发版（Debug Dev APK）**：
-  构建完成后，点击该次构建的运行记录，直接拉到页面最底部。在 **Artifacts** 区域可以直接下载 **`MoshidonQX-Debug-Dev-APK`**。
-  *(注：该测试版已自动启用 `.debug` 包名后缀，可与官方包共存，且内部已激活 Crash 崩溃日志自诊断捕获功能)*
-* **正式签名发布版（Release APK）**：
-  如果您想编译可直接发布的正式签名版，请在仓库的 **Settings -> Secrets and variables -> Actions -> Secrets** 下配置以下两个敏感密钥（Repository secrets）：
-  * `KEYSTORE_FILE`：您私有 `.jks` 证书文件的 Base64 字符串。
-  * `KEYSTORE_PASSWORD`：证书的签名密码。
-  配置这两个密钥后，Actions 在构建时不仅会产出测试版，还会自动签名并在仓库的 **Releases** 页面发布带正式签名的专属 Release 包！
+本项目为您设计了**两个完全独立的工作流**，分别满足您的日常测试与生产发布需求：
+
+#### **1. 🛠️ 开发测试流：`Build MoshidonQX (Dev 测试版)`**
+* **特点**：编译极其迅速，**不需要任何证书签名配置**。
+* **日志支持**：**此版本内部已全面激活 Crash 崩溃日志自诊断系统**，闪退时会自动往手机内写入错误日志，极其便于测试排错！
+* **编译包名**：已自动启用 `.debug` 包名后缀（如 `org.joinmastodon.android.qx.debug`），**可与您手机里的正式版客户端完美并存**，无需卸载旧版。
+* **操作步骤**：
+  1. 进入 Actions 页签，在左侧选择 `Build MoshidonQX (Dev 测试版)`。
+  2. 点击右侧 **Run workflow**（可任选输入本次定制的临时参数，不输则自动取配置变量），启动构建。
+  3. 运行完成后，点击该次构建记录，直接拉到页面最底部，在 **Artifacts** 区域直接下载 **`MoshidonQX-Debug-Dev-APK`** 即可。
+
+#### **2. 💎 生产发布流：`Build MoshidonQX (Prod 正式签名版)`**
+* **特点**：正式的包名（无 `.debug` 后缀），使用您私有的正式证书完成对 APK 的物理签名。
+* **日志支持**：**此生产正式版完全关闭了崩溃日志捕获与本地写入功能**，不仅避免了占用用户日常存储空间，更保证了运行的高稳定度与极致纯净度。
+* **发布方式**：自动打包、签名，并一键发布至仓库的 **Releases** 页面，方便直接更新和给他人下载！
+* **操作步骤**：
+  1. 前往仓库 **Settings -> Secrets and variables -> Actions -> Secrets**，配置以下两个密钥：
+     * `KEYSTORE_FILE`：您私有 `.jks` 证书文件的 Base64 字符串（可在 Action 运行 `generate-keystore` 生成后复制其日志）。
+     * `KEYSTORE_PASSWORD`：您的证书密码。
+  2. 进入 Actions 页签，左侧选择 `Build MoshidonQX (Prod 正式签名版)`。
+  3. 点击 **Run workflow** 并启动构建。
+  4. 编译完成后，直接前往您仓库的 **Releases** 页面即可下载打包好的正式签名版 APK！
 
 ---
 

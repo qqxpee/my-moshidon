@@ -1,0 +1,55 @@
+name: Build MoshidonQX (Dev 测试版)
+
+on:
+  workflow_dispatch:
+    inputs:
+      custom_application_id:
+        description: '自定义包名/Package Name (例如: org.joinmastodon.android.qx，留空则默认取项目配置文件)'
+        required: false
+        default: ''
+      custom_app_name:
+        description: '自定义应用名/App Name (例如: MoshidonQX，留空则默认取项目配置文件)'
+        required: false
+        default: ''
+      max_images_limit:
+        description: '最大图片上传限制/Max Images Limit (例如: 12，留空则默认取项目配置文件)'
+        required: false
+        default: ''
+
+env:
+  CUSTOM_APPLICATION_ID: ${{ github.event.inputs.custom_application_id || vars.CUSTOM_APPLICATION_ID || '' }}
+  CUSTOM_APP_NAME: ${{ github.event.inputs.custom_app_name || vars.CUSTOM_APP_NAME || '' }}
+  MAX_IMAGES_LIMIT: ${{ github.event.inputs.max_images_limit || vars.MAX_IMAGES_LIMIT || '' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+      - name: Build Debug (Dev) APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :mastodon:assembleDebug --no-daemon
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoshidonQX-Debug-Dev-APK
+          path: mastodon/build/outputs/apk/debug/*.apk

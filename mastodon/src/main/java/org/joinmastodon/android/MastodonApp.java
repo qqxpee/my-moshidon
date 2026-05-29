@@ -20,7 +20,9 @@ public class MastodonApp extends Application{
 	@Override
 	public void onCreate(){
 		super.onCreate();
-		org.joinmastodon.android.utils.CrashHandler.getInstance().init(this);
+		if (BuildConfig.DEBUG) {
+			org.joinmastodon.android.utils.CrashHandler.getInstance().init(this);
+		}
 		context=getApplicationContext();
 		V.setApplicationContext(context);
 		ImageCache.Parameters params=new ImageCache.Parameters();

@@ -1,4 +1,4 @@
-name: Build and Release MoshidonQX (Chinese Support)
+name: Build MoshidonQX (Prod 正式签名版)
 
 on:
   workflow_dispatch:
@@ -20,7 +20,7 @@ env:
   KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
   CUSTOM_APPLICATION_ID: ${{ github.event.inputs.custom_application_id || vars.CUSTOM_APPLICATION_ID || '' }}
-  CUSTOM_APP_NAME: ${{ github.event.inputs.custom_app_name || vars.CUSTOM_APP_NAME || 'MoshidonQX' }}
+  CUSTOM_APP_NAME: ${{ github.event.inputs.custom_app_name || vars.CUSTOM_APP_NAME || '' }}
   MAX_IMAGES_LIMIT: ${{ github.event.inputs.max_images_limit || vars.MAX_IMAGES_LIMIT || '' }}
 
 jobs:
@@ -47,19 +47,14 @@ jobs:
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Build Debug (Dev) APK
+      - name: Verify Signing Secrets
         run: |
-          chmod +x gradlew
-          ./gradlew :mastodon:assembleDebug --no-daemon
-
-      - name: Upload Debug APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: MoshidonQX-Debug-Dev-APK
-          path: mastodon/build/outputs/apk/debug/*.apk
+          if [ -z "${{ env.KEYSTORE_FILE }}" ]; then
+            echo "ERROR: KEYSTORE_FILE secret is missing! Please configure KEYSTORE_FILE in repository secrets."
+            exit 1
+          fi
 
       - name: Decode Keystore
-        if: ${{ env.KEYSTORE_FILE != '' }}
         uses: timheuer/base64-to-file@v1
         id: android_keystore
         with:
@@ -67,36 +62,49 @@ jobs:
           encodedString: ${{ env.KEYSTORE_FILE }}
 
       - name: Build Release APK
-        if: ${{ env.KEYSTORE_FILE != '' }}
         run: |
+          chmod +x gradlew
           ./gradlew :mastodon:assembleRelease --no-daemon
 
       - name: Locate and Sign APK
-        if: ${{ env.KEYSTORE_FILE != '' }}
         run: |
           UNSIGNED_APK=$(find . -path "*/build/outputs/apk/*" -name "*.apk" | grep -i "release" | grep -v "\-Signed.apk" | head -n 1)
-          [ -z "$UNSIGNED_APK" ] && exit 1
+          if [ -z "$UNSIGNED_APK" ]; then
+            echo "ERROR: Could not locate compiled release APK!"
+            exit 1
+          fi
           
-          SIGNED_APK="Moshidonv2.3.0-QX.${{ github.run_number }}.apk"
+          FINAL_APP_NAME="${{ env.CUSTOM_APP_NAME }}"
+          if [ -z "$FINAL_APP_NAME" ]; then
+            FINAL_APP_NAME="Moshidon"
+          fi
+          
+          SIGNED_APK="${FINAL_APP_NAME}-v2.3.0-Prod-Signed.apk"
           
           $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
             --ks ${{ steps.android_keystore.outputs.filePath }} \
             --ks-pass pass:${{ env.KEYSTORE_PASSWORD }} \
             --ks-key-alias custom-alias \
             --out "$SIGNED_APK" "$UNSIGNED_APK"
+            
+          echo "SIGNED_APK_PATH=$SIGNED_APK" >> $GITHUB_ENV
+          echo "FINAL_APP_NAME=$FINAL_APP_NAME" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        if: ${{ env.KEYSTORE_FILE != '' }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: "${{ env.CUSTOM_APP_NAME }} v2.3.0-QX.${{ github.run_number }}"
+          tag_name: v1.0.${{ github.run_number }}-prod
+          name: "${{ env.FINAL_APP_NAME }} v2.3.0-Prod.${{ github.run_number }}"
           body: |
-            ## MoshidonQX 定制发布
-            - **应用名**：${{ env.CUSTOM_APP_NAME }}
-            - **版本**：2.3.0-QX.${{ github.run_number }}
+            ## MoshidonQX 正式版发布 (Production)
+            - **应用名**：${{ env.FINAL_APP_NAME }}
+            - **包名**：${{ env.CUSTOM_APPLICATION_ID }}
+            - **版本**：2.3.0-Prod.${{ github.run_number }}
             - **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器
+            
+            > [!TIP]
+            > 此版本为生产发布版，内部未激活崩溃日志写入系统以节省用户存储空间，极其稳定纯净！
           files: |
-            Moshidonv2.3.0-QX.${{ github.run_number }}.apk
+            ${{ env.SIGNED_APK_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
