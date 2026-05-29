@@ -63,17 +63,36 @@ jobs:
 
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Build Release APK
+      - name: Build Debug (Dev) APK
         run: |
           chmod +x gradlew
+          ./gradlew :mastodon:assembleDebug --no-daemon
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoshidonQX-Debug-Dev-APK
+          path: mastodon/build/outputs/apk/debug/*.apk
+
+      - name: Decode Keystore
+        if: ${{ secrets.KEYSTORE_FILE != '' }}
+        uses: timheuer/base64-to-file@v1
+        id: android_keystore
+        with:
+          fileName: "release.jks"
+          encodedString: ${{ secrets.KEYSTORE_FILE }}
+
+      - name: Build Release APK
+        if: ${{ secrets.KEYSTORE_FILE != '' }}
+        run: |
           ./gradlew :mastodon:assembleRelease --no-daemon
 
       - name: Locate and Sign APK
+        if: ${{ secrets.KEYSTORE_FILE != '' }}
         run: |
           UNSIGNED_APK=$(find . -path "*/build/outputs/apk/*" -name "*.apk" | grep -i "release" | grep -v "\-Signed.apk" | head -n 1)
           [ -z "$UNSIGNED_APK" ] && exit 1
           
-          # 更新点 1：将写死的文件名替换为包含 run_number 的动态文件名
           SIGNED_APK="Moshidonv2.3.0-QX.${{ github.run_number }}.apk"
           
           $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
@@ -83,6 +102,7 @@ jobs:
             --out "$SIGNED_APK" "$UNSIGNED_APK"
 
       - name: Create GitHub Release
+        if: ${{ secrets.KEYSTORE_FILE != '' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
@@ -92,7 +112,6 @@ jobs:
             - **应用名**：${{ secrets.CUSTOM_APP_NAME }}
             - **版本**：2.3.0-QX.${{ github.run_number }}
             - **修改**：12张图解锁、包名重置、全语言应用名覆盖
-          # 更新点 2：同步修改 Release 阶段读取的文件名
           files: |
             Moshidonv2.3.0-QX.${{ github.run_number }}.apk
         env:
