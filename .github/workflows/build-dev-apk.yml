@@ -17,9 +17,9 @@ on:
         default: ''
 
 env:
-  CUSTOM_APPLICATION_ID: ${{ github.event.inputs.custom_application_id || vars.CUSTOM_APPLICATION_ID || '' }}
-  CUSTOM_APP_NAME: ${{ github.event.inputs.custom_app_name || vars.CUSTOM_APP_NAME || '' }}
-  MAX_IMAGES_LIMIT: ${{ github.event.inputs.max_images_limit || vars.MAX_IMAGES_LIMIT || '' }}
+  CUSTOM_APPLICATION_ID: ${{ github.event.inputs.custom_application_id || secrets.CUSTOM_APPLICATION_ID || vars.CUSTOM_APPLICATION_ID || '' }}
+  CUSTOM_APP_NAME: ${{ github.event.inputs.custom_app_name || secrets.CUSTOM_APP_NAME || vars.CUSTOM_APP_NAME || '' }}
+  MAX_IMAGES_LIMIT: ${{ github.event.inputs.max_images_limit || secrets.MAX_IMAGES_LIMIT || vars.MAX_IMAGES_LIMIT || '' }}
 
 jobs:
   build:
