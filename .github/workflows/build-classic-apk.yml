@@ -29,13 +29,6 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Decode Keystore
-        uses: timheuer/base64-to-file@v1
-        id: android_keystore
-        with:
-          fileName: "release.jks"
-          encodedString: ${{ secrets.KEYSTORE_FILE }}
-
       - name: MoshidonQX Hard Patch & Debug Logging
         run: |
           TARGET_JAVA="mastodon/src/main/java/org/joinmastodon/android/ui/viewcontrollers/ComposeMediaViewController.java"
