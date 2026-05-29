@@ -127,7 +127,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 					smtpPasswordItem.subtitle=TextUtils.isEmpty(text) ? "" : "********";
 					rebindItem(smtpPasswordItem);
 				})),
-				smtpSSLItem=new CheckableListItem<>("使用 SSL/TLS (端口 465)", 0, CheckableListItem.Style.SWITCH, GlobalUserPreferences.smtpUseSSL, R.drawable.ic_fluent_shield_24_regular, i->toggleCheckableItem(smtpSSLItem)),
+				smtpSSLItem=new CheckableListItem<>("使用 SSL/TLS (端口 465)", null, CheckableListItem.Style.SWITCH, GlobalUserPreferences.smtpUseSSL, R.drawable.ic_fluent_shield_24_regular, i->toggleCheckableItem(smtpSSLItem)),
 				senderEmailItem=new ListItem<>("发件人邮箱", GlobalUserPreferences.senderEmail, R.drawable.ic_fluent_mail_24_regular, i->showTextInputDialog("发件人邮箱", GlobalUserPreferences.senderEmail, text->{
 					GlobalUserPreferences.senderEmail=text;
 					senderEmailItem.subtitle=text;
