@@ -328,11 +328,17 @@ public class GlobalUserPreferences{
 			String accountID=session.getID();
 			AccountLocalPreferences localPrefs=session.getLocalPreferences();
 			localPrefs.revealCWs=prefs.getBoolean("alwaysExpandContentWarnings", false);
-			localPrefs.recentLanguages=recentLanguages.get(accountID);
+			ArrayList<String> recLangs=recentLanguages.get(accountID);
+			if(recLangs!=null){
+				localPrefs.recentLanguages=recLangs;
+			}
 			// reset: localPrefs.contentTypesEnabled=accountsWithContentTypesEnabled.contains(accountID);
 			localPrefs.defaultContentType=accountsDefaultContentTypes.getOrDefault(accountID, ContentType.PLAIN);
 			localPrefs.showInteractionCounts=prefs.getBoolean("showInteractionCounts", false);
-			localPrefs.timelines=pinnedTimelines.getOrDefault(accountID, TimelineDefinition.getDefaultTimelines(accountID));
+			ArrayList<TimelineDefinition> timelines=pinnedTimelines.get(accountID);
+			if(timelines!=null){
+				localPrefs.timelines=timelines;
+			}
 			localPrefs.localOnlySupported=accountsWithLocalOnlySupport.contains(accountID);
 			localPrefs.glitchInstance=accountsInGlitchMode.contains(accountID);
 			localPrefs.publishButtonText=prefs.getString("publishButtonText", null);

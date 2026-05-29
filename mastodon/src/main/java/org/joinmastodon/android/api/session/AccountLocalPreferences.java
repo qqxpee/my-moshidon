@@ -78,10 +78,12 @@ public class AccountLocalPreferences{
 		showReplies=prefs.getBoolean("showReplies", true);
 		showBoosts=prefs.getBoolean("showBoosts", true);
 		recentLanguages=fromJson(prefs.getString("recentLanguages", null), recentLanguagesType, new ArrayList<>());
+		if(recentLanguages==null) recentLanguages=new ArrayList<>();
 		bottomEncoding=prefs.getBoolean("bottomEncoding", false);
 		defaultContentType=enumValue(ContentType.class, prefs.getString("defaultContentType", instance.map(Instance::isIceshrimp).orElse(false) ? ContentType.MISSKEY_MARKDOWN.name() : ContentType.PLAIN.name()));
 		contentTypesEnabled=prefs.getBoolean("contentTypesEnabled", instance.map(i->!i.isIceshrimp()).orElse(false));
 		timelines=fromJson(prefs.getString("timelines", null), timelinesType, TimelineDefinition.getDefaultTimelines(session.getID()));
+		if(timelines==null) timelines=TimelineDefinition.getDefaultTimelines(session.getID());
 		localOnlySupported=prefs.getBoolean("localOnlySupported", false);
 		glitchInstance=prefs.getBoolean("glitchInstance", false);
 		publishButtonText=prefs.getString("publishButtonText", null);
@@ -91,6 +93,7 @@ public class AccountLocalPreferences{
 		showEmojiReactions=ShowEmojiReactions.valueOf(prefs.getString("showEmojiReactions", ShowEmojiReactions.HIDE_EMPTY.name()));
 		color=prefs.contains("color") ? ColorPreference.valueOf(prefs.getString("color", null)) : null;
 		recentCustomEmoji=fromJson(prefs.getString("recentCustomEmoji", null), recentCustomEmojiType, new ArrayList<>());
+		if(recentCustomEmoji==null) recentCustomEmoji=new ArrayList<>();
 
 		// MOSHIDON
 //		recentEmojis=fromJson(prefs.getString("recentEmojis", "{}"), recentEmojisType, new HashMap<>());
@@ -123,11 +126,11 @@ public class AccountLocalPreferences{
 				// MEGALODON
 				.putBoolean("showReplies", showReplies)
 				.putBoolean("showBoosts", showBoosts)
-				.putString("recentLanguages", gson.toJson(recentLanguages))
+				.putString("recentLanguages", gson.toJson(recentLanguages == null ? new ArrayList<>() : recentLanguages))
 				.putBoolean("bottomEncoding", bottomEncoding)
 				.putString("defaultContentType", defaultContentType==null ? null : defaultContentType.name())
 				.putBoolean("contentTypesEnabled", contentTypesEnabled)
-				.putString("timelines", gson.toJson(timelines))
+				.putString("timelines", gson.toJson(timelines == null ? new ArrayList<>() : timelines))
 				.putBoolean("localOnlySupported", localOnlySupported)
 				.putBoolean("glitchInstance", glitchInstance)
 				.putString("publishButtonText", publishButtonText)
@@ -136,7 +139,7 @@ public class AccountLocalPreferences{
 				.putBoolean("emojiReactionsEnabled", emojiReactionsEnabled)
 				.putString("showEmojiReactions", showEmojiReactions.name())
 				.putString("color", color!=null ? color.name() : null)
-				.putString("recentCustomEmoji", gson.toJson(recentCustomEmoji))
+				.putString("recentCustomEmoji", gson.toJson(recentCustomEmoji == null ? new ArrayList<>() : recentCustomEmoji))
 
 				// MOSHIDON
 //				.putString("recentEmojis", gson.toJson(recentEmojis))

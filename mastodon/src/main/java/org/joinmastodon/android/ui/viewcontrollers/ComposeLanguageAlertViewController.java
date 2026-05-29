@@ -94,12 +94,14 @@ public class ComposeLanguageAlertViewController{
 
 		AccountLocalPreferences lp=session==null ? null : session.getLocalPreferences();
 		if(lp!=null){
-			for(String tag : lp.recentLanguages){
-				if(specialLocales.stream().anyMatch(l->l.language!=null && l.language.languageTag!=null
-						&& l.language.languageTag.equals(tag))) continue;
-				resolver.from(tag).ifPresent(lang->specialLocales.add(new SpecialLocaleInfo(
-						lang, lang.getDisplayName(context), null
-				)));
+			if(lp.recentLanguages!=null){
+				for(String tag : lp.recentLanguages){
+					if(specialLocales.stream().anyMatch(l->l.language!=null && l.language.languageTag!=null
+							&& l.language.languageTag.equals(tag))) continue;
+					resolver.from(tag).ifPresent(lang->specialLocales.add(new SpecialLocaleInfo(
+							lang, lang.getDisplayName(context), null
+					)));
+				}
 			}
 			if(lp.bottomEncoding) {
 				specialLocales.add(new SpecialLocaleInfo(null, "\uD83E\uDD7A\uD83D\uDC49\uD83D\uDC48", "bottom"));

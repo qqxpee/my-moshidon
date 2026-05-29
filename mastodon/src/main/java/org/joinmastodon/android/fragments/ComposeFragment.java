@@ -1351,6 +1351,9 @@ public class ComposeFragment extends MastodonToolbarFragment implements OnBackPr
 		if (postLang == null || postLang.language == null) return;
 		String language = postLang.language.getLanguage();
 		AccountLocalPreferences prefs = AccountSessionManager.get(accountID).getLocalPreferences();
+		if(prefs.recentLanguages==null){
+			prefs.recentLanguages=new ArrayList<>();
+		}
 		prefs.recentLanguages.remove(language);
 		prefs.recentLanguages.add(0, language);
 		if (postLang.encoding != null) {
