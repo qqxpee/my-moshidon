@@ -445,6 +445,29 @@ public class PhotoViewer implements ZoomPanView.Listener{
 			videoLastTimeUpdatePosition=-1;
 			updateVideoTimeText(0);
 		}
+
+		// PAUSE OTHER PLAYERS AND START CURRENT PLAYER
+		RecyclerView rv=(RecyclerView) pager.getChildAt(0);
+		if(rv!=null){
+			for(int i=0; i<rv.getChildCount(); i++){
+				RecyclerView.ViewHolder vh=rv.getChildViewHolder(rv.getChildAt(i));
+				if(vh instanceof GifVViewHolder gifHolder){
+					if(gifHolder.getAbsoluteAdapterPosition()==index){
+						if(gifHolder.player!=null && gifHolder.surface!=null){
+							gifHolder.player.play();
+							if(att.type==Attachment.Type.VIDEO){
+								startUpdatingVideoPosition(gifHolder.player);
+								hideUiDelayed();
+							}
+						}
+					}else{
+						if(gifHolder.player!=null && gifHolder.player.isPlaying()){
+							gifHolder.player.pause();
+						}
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -697,9 +720,11 @@ public class PhotoViewer implements ZoomPanView.Listener{
 		ExoPlayer player=findCurrentVideoPlayer();
 		if(player==null || player.isPlaying())
 			return;
+		if(player.getPlaybackState()==Player.STATE_ENDED){
+			player.seekTo(0);
+		}
 		player.play();
 		videoPlayPauseButton.setImageResource(R.drawable.ic_fluent_pause_24_filled);
-		videoPlayPauseButton.setContentDescription(activity.getString(R.style.Theme_Mastodon_Dark)); // placeholder to match context but let's use standard string activity.getString(R.string.pause)
 		videoPlayPauseButton.setContentDescription(activity.getString(R.string.pause));
 		startUpdatingVideoPosition(player);
 	}
@@ -1075,6 +1100,9 @@ public class PhotoViewer implements ZoomPanView.Listener{
 
 		@Override
 		public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface){
+			if(player!=null){
+				player.setVideoSurface(null);
+			}
 			this.surface=null;
 			return true;
 		}
@@ -1104,6 +1132,9 @@ public class PhotoViewer implements ZoomPanView.Listener{
 		}
 
 		public void prepareAndStartPlayer(){
+			if(player!=null){
+				return; // Already initialized!
+			}
 			playerReady=false;
 			player=new ExoPlayer.Builder(activity).build();
 			players.add(player);
