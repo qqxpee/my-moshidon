@@ -52,9 +52,37 @@ jobs:
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Resolve Version Configurations
+      - name: Resolve Custom Configurations
         run: |
-          # 1. Resolve Version Code
+          # 1. Resolve Application ID（Dev 版自动追加 .debug 后缀，与正式版共存）
+          RESOLVED_APP_ID="${{ env.CUSTOM_APPLICATION_ID }}"
+          if [ -z "$RESOLVED_APP_ID" ]; then
+            if [ -f "config.properties" ]; then
+              RESOLVED_APP_ID=$(grep "^custom_application_id=" config.properties | cut -d'=' -f2 | tr -d '\r\n ')
+            fi
+          fi
+          if [ -z "$RESOLVED_APP_ID" ]; then
+            RESOLVED_APP_ID="org.joinmastodon.android.qx"
+          fi
+          RESOLVED_APP_ID="${RESOLVED_APP_ID}.debug"
+
+          # 2. Resolve Application Name
+          RESOLVED_APP_NAME="${{ env.CUSTOM_APP_NAME }}"
+          if [ -z "$RESOLVED_APP_NAME" ]; then
+            if [ -f "config.properties" ]; then
+              RESOLVED_APP_NAME=$(grep "^custom_app_name=" config.properties | cut -d'=' -f2 | tr -d '\r\n ')
+            fi
+          fi
+          if [ -z "$RESOLVED_APP_NAME" ]; then
+            RESOLVED_APP_NAME="Moshidon"
+          fi
+
+          echo "RESOLVED_APP_ID=$RESOLVED_APP_ID" >> $GITHUB_ENV
+          echo "RESOLVED_APP_NAME=$RESOLVED_APP_NAME" >> $GITHUB_ENV
+          echo "Resolved App ID: $RESOLVED_APP_ID"
+          echo "Resolved App Name: $RESOLVED_APP_NAME"
+
+          # 3. Resolve Version Code
           RESOLVED_VERSION_CODE="${{ github.event.inputs.version_code || secrets.VERSION_CODE || vars.VERSION_CODE || '' }}"
           if [ -z "$RESOLVED_VERSION_CODE" ]; then
             if [ -f "config.properties" ]; then
@@ -64,8 +92,8 @@ jobs:
           if [ -z "$RESOLVED_VERSION_CODE" ]; then
             RESOLVED_VERSION_CODE="${{ github.run_number }}"
           fi
-          
-          # 2. Resolve Version Name
+
+          # 4. Resolve Version Name
           RESOLVED_VERSION_NAME="${{ github.event.inputs.version_name || secrets.VERSION_NAME || vars.VERSION_NAME || '' }}"
           if [ -z "$RESOLVED_VERSION_NAME" ]; then
             if [ -f "config.properties" ]; then
@@ -75,14 +103,26 @@ jobs:
           if [ -z "$RESOLVED_VERSION_NAME" ]; then
             RESOLVED_VERSION_NAME="1.0.${{ github.run_number }}"
           fi
-          
+
           echo "VERSION_CODE=$RESOLVED_VERSION_CODE" >> $GITHUB_ENV
           echo "VERSION_NAME=$RESOLVED_VERSION_NAME" >> $GITHUB_ENV
           echo "Resolved Version Code: $RESOLVED_VERSION_CODE"
           echo "Resolved Version Name: $RESOLVED_VERSION_NAME"
 
-      - name: Build Debug (Dev) APK
+          # 5. Resolve Max Images Limit
+          RESOLVED_MAX_IMAGES="${{ env.MAX_IMAGES_LIMIT }}"
+          if [ -z "$RESOLVED_MAX_IMAGES" ]; then
+            if [ -f "config.properties" ]; then
+              RESOLVED_MAX_IMAGES=$(grep "^max_images_limit=" config.properties | cut -d'=' -f2 | tr -d '\r\n ')
+            fi
+          fi
+          if [ -z "$RESOLVED_MAX_IMAGES" ]; then
+            RESOLVED_MAX_IMAGES="12"
+          fi
+          echo "RESOLVED_MAX_IMAGES=$RESOLVED_MAX_IMAGES" >> $GITHUB_ENV
+          echo "Resolved Max Images: $RESOLVED_MAX_IMAGES"
 
+      - name: Build Debug (Dev) APK
         run: |
           chmod +x gradlew
           ./gradlew :mastodon:assembleDebug --no-daemon
