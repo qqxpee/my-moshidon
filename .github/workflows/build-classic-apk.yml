@@ -6,6 +6,8 @@ on:
 env:
   # 这里的包名必须保持英文，不要动！
   NEW_APP_ID: "org.joinmastodon.android.qx"
+  KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
 
 jobs:
   build:
@@ -75,20 +77,20 @@ jobs:
           path: mastodon/build/outputs/apk/debug/*.apk
 
       - name: Decode Keystore
-        if: ${{ secrets.KEYSTORE_FILE != '' }}
+        if: ${{ env.KEYSTORE_FILE != '' }}
         uses: timheuer/base64-to-file@v1
         id: android_keystore
         with:
           fileName: "release.jks"
-          encodedString: ${{ secrets.KEYSTORE_FILE }}
+          encodedString: ${{ env.KEYSTORE_FILE }}
 
       - name: Build Release APK
-        if: ${{ secrets.KEYSTORE_FILE != '' }}
+        if: ${{ env.KEYSTORE_FILE != '' }}
         run: |
           ./gradlew :mastodon:assembleRelease --no-daemon
 
       - name: Locate and Sign APK
-        if: ${{ secrets.KEYSTORE_FILE != '' }}
+        if: ${{ env.KEYSTORE_FILE != '' }}
         run: |
           UNSIGNED_APK=$(find . -path "*/build/outputs/apk/*" -name "*.apk" | grep -i "release" | grep -v "\-Signed.apk" | head -n 1)
           [ -z "$UNSIGNED_APK" ] && exit 1
@@ -97,12 +99,12 @@ jobs:
           
           $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
             --ks ${{ steps.android_keystore.outputs.filePath }} \
-            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --ks-pass pass:${{ env.KEYSTORE_PASSWORD }} \
             --ks-key-alias custom-alias \
             --out "$SIGNED_APK" "$UNSIGNED_APK"
 
       - name: Create GitHub Release
-        if: ${{ secrets.KEYSTORE_FILE != '' }}
+        if: ${{ env.KEYSTORE_FILE != '' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
