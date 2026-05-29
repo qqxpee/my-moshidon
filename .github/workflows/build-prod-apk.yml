@@ -211,47 +211,34 @@ jobs:
             echo "ERROR: Could not locate compiled release APK!"
             exit 1
           fi
-          
-          # 直接使用中文应用名作为 APK 文件名
-          SIGNED_APK="${{ env.RESOLVED_APP_NAME }}-v${{ env.VERSION_NAME }}-Prod-Signed.apk"
-          
+
+          # 使用包名（纯 ASCII）作为文件名前缀，避免中文文件名在 GitHub Release URL 中异常
+          SIGNED_APK="${{ env.RESOLVED_APP_ID }}-${{ env.VERSION_NAME }}.apk"
+
           $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
             --ks "${{ env.SIGNING_KEYSTORE_PATH }}" \
             --ks-pass "pass:${{ env.SIGNING_PASSWORD }}" \
             --ks-key-alias custom-alias \
             --out "$SIGNED_APK" "$UNSIGNED_APK"
-            
+
           echo "SIGNED_APK_PATH=$SIGNED_APK" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        run: |
-          # gh CLI 和 softprops/action-gh-release 都会在构建上传 URL 时丢弃非 ASCII 字符
-          # 解决方案：gh CLI 仅创建 Release（不含附件），再用 curl + Python3 URL 编码上传 APK
-          # Python3 urllib.parse.quote 将中文转为合法 %xx 编码，GitHub API 解码后原样保存文件名
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION_NAME }}-prod
+          name: "${{ env.RESOLVED_APP_NAME }} v${{ env.VERSION_NAME }}-Prod"
+          body: |
+            ## MoshidonQX 正式版发布 (Production)
+            - **应用名**：${{ env.RESOLVED_APP_NAME }}
+            - **包名**：${{ env.RESOLVED_APP_ID }}
+            - **版本**：${{ env.VERSION_NAME }}-Prod (VersionCode: ${{ env.VERSION_CODE }})
+            - **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器
 
-          TAG="v${VERSION_NAME}-prod"
-          APK_BASENAME=$(basename "$SIGNED_APK_PATH")
-
-          # 构建 Release 描述（使用 printf 避免 heredoc 缩进问题）
-          NOTES=$(printf '## MoshidonQX 正式版发布 (Production)\n- **应用名**：%s\n- **包名**：%s\n- **版本**：%s-Prod (VersionCode: %s)\n- **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器\n\n> [!TIP]\n> 此版本为生产发布版，内部未激活崩溃日志写入系统以节省用户存储空间，极其稳定纯净！' \
-            "$RESOLVED_APP_NAME" "$RESOLVED_APP_ID" "$VERSION_NAME" "$VERSION_CODE")
-
-          # 1. 创建 Release（不含附件）
-          gh release create "$TAG" \
-            --title "${RESOLVED_APP_NAME} v${VERSION_NAME}-Prod" \
-            --notes "$NOTES"
-
-          # 2. 获取 Release ID
-          RELEASE_ID=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.id')
-
-          # 3. 用 Python3 将文件名 URL 编码（正确处理中文），再用 curl 直接调用 GitHub Upload API 上传 APK
-          ENCODED_NAME=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$APK_BASENAME")
-
-          curl -s -X POST \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            --data-binary "@${SIGNED_APK_PATH}" \
-            "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?name=${ENCODED_NAME}"
+            > [!TIP]
+            > 此版本为生产发布版，内部未激活崩溃日志写入系统以节省用户存储空间，极其稳定纯净！
+          files: |
+            ${{ env.SIGNED_APK_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
