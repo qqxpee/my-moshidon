@@ -141,7 +141,7 @@ public class AccountLocalPreferences{
 				// MOSHIDON
 //				.putString("recentEmojis", gson.toJson(recentEmojis))
 				.putString("notificationFilters", gson.toJson(notificationFilters))
-				.apply();
+				.commit();
 	}
 
 	public enum ColorPreference{

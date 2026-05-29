@@ -247,7 +247,7 @@ public class GlobalUserPreferences{
 				.putBoolean("enhanceTextSize", enhanceTextSize)
 				.putInt("maxImagesLimit", maxImagesLimit)
 
-				.apply();
+				.commit();
 	}
 
 	public static boolean isOptedOutOfPreReplySheet(PreReplySheetType type, Account account, String accountID){
