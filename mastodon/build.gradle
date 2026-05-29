@@ -8,9 +8,9 @@ if (configFile.exists()) {
 	configFile.withInputStream { configProperties.load(it) }
 }
 
-def customAppId = configProperties.getProperty("custom_application_id", "org.joinmastodon.android.moshinda")
-def customAppName = configProperties.getProperty("custom_app_name", "Moshidon")
-def maxImagesLimit = configProperties.getProperty("max_images_limit", "12")
+def customAppId = System.getenv("CUSTOM_APPLICATION_ID") ?: configProperties.getProperty("custom_application_id", "org.joinmastodon.android.moshinda")
+def customAppName = System.getenv("CUSTOM_APP_NAME") ?: configProperties.getProperty("custom_app_name", "Moshidon")
+def maxImagesLimit = System.getenv("MAX_IMAGES_LIMIT") ?: configProperties.getProperty("max_images_limit", "12")
 
 java {
 	toolchain {
@@ -106,7 +106,9 @@ android {
 			debuggable true
 			versionNameSuffix '-debug'
 			applicationIdSuffix '.debug'
-			manifestPlaceholders = [oAuthScheme:"moshidon-android-debug-auth"]
+			manifestPlaceholders.putAll([
+				oAuthScheme: "${customAppId.replace('.', '-')}-debug-auth"
+			])
 		}
 		githubRelease{
 			initWith release
@@ -122,7 +124,9 @@ android {
 			applicationIdSuffix '.nightly'
 
 			signingConfig signingConfigs.nightly
-			manifestPlaceholders = [oAuthScheme:"moshidon-android-nightly-auth"]
+			manifestPlaceholders.putAll([
+				oAuthScheme: "${customAppId.replace('.', '-')}-nightly-auth"
+			])
 		}
 		playRelease{
 			initWith release

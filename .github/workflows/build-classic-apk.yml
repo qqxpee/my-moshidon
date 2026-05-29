@@ -2,12 +2,26 @@ name: Build and Release MoshidonQX (Chinese Support)
 
 on:
   workflow_dispatch:
+    inputs:
+      custom_application_id:
+        description: '自定义包名/Package Name (例如: org.joinmastodon.android.qx，留空则默认取项目配置文件)'
+        required: false
+        default: ''
+      custom_app_name:
+        description: '自定义应用名/App Name (例如: MoshidonQX，留空则默认取项目配置文件)'
+        required: false
+        default: ''
+      max_images_limit:
+        description: '最大图片上传限制/Max Images Limit (例如: 12，留空则默认取项目配置文件)'
+        required: false
+        default: ''
 
 env:
-  # 这里的包名必须保持英文，不要动！
-  NEW_APP_ID: "org.joinmastodon.android.qx"
   KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+  CUSTOM_APPLICATION_ID: ${{ github.event.inputs.custom_application_id || vars.CUSTOM_APPLICATION_ID || '' }}
+  CUSTOM_APP_NAME: ${{ github.event.inputs.custom_app_name || vars.CUSTOM_APP_NAME || 'MoshidonQX' }}
+  MAX_IMAGES_LIMIT: ${{ github.event.inputs.max_images_limit || vars.MAX_IMAGES_LIMIT || '' }}
 
 jobs:
   build:
@@ -76,12 +90,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "${{ secrets.CUSTOM_APP_NAME }} v2.3.0-QX.${{ github.run_number }}"
+          name: "${{ env.CUSTOM_APP_NAME }} v2.3.0-QX.${{ github.run_number }}"
           body: |
             ## MoshidonQX 定制发布
-            - **应用名**：${{ secrets.CUSTOM_APP_NAME }}
+            - **应用名**：${{ env.CUSTOM_APP_NAME }}
             - **版本**：2.3.0-QX.${{ github.run_number }}
-            - **修改**：12张图解锁、包名重置、全语言应用名覆盖
+            - **修改**：12张图解锁、包名重置、全语言应用名覆盖、超丝滑 ExoPlayer 播放器
           files: |
             Moshidonv2.3.0-QX.${{ github.run_number }}.apk
         env:
